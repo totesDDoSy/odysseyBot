@@ -68,7 +68,7 @@ client.on( 'message', message =>
     // Value is the chat command.
     for( let key in properties['commands']['actions'] )
     {
-      if( properties['commands']['actions'][key] === command )
+      if( properties['commands']['actions'][key].toLowerCase() === command )
       {
         // Switch on the action we want to perform.
         switch( key )
@@ -162,7 +162,7 @@ function initMeetingChecker()
     let meeting = properties['meeting'];
 
     // Check for day before the meeting.
-    if( now.getDay() === meeting['day'] - 1 )
+    if( now.getDay() === ( meeting['day'] + 6 ) % 7 )
     {
       let hour = parseInt( meeting['time'].split(':')[0] );
       // Check to see if we're 24h before the meeting.

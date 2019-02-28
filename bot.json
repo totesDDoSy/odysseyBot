@@ -1,6 +1,6 @@
 {
   "botname":"Odyssey Bot",
-  "discordToken":"NTA3MzcwNjQwNTkzMTI1Mzc2.Drvtcg.k81ZhOs7TrZITUMiJWX-YgJP4W4",
+  "discordToken":"<TOKEN>",
   "debug":true,
   "adminRole":"507368889865469962",
   "invalidPermissionMessage":"You can't do that!",
