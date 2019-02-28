@@ -1,0 +1,39 @@
+{
+  "botname":"Odyssey Bot",
+  "discordToken":"NTA3MzcwNjQwNTkzMTI1Mzc2.Drvtcg.k81ZhOs7TrZITUMiJWX-YgJP4W4",
+  "debug":true,
+  "adminRole":"507368889865469962",
+  "invalidPermissionMessage":"You can't do that!",
+  "welcomeChannel":"general",
+  "welcomeMessage":"Welcome to the Odyssey Development server! If you are here to check out progress on the mod, please be aware than all channels other than #general contain spoilers. If you're interested in joining the team, access to additional information and the application form are available on our trello page (LINK: https://trello.com/b/bybjrWOB/odyssey-of-the-dragonborn-home). Please contact icecreamassassin if you submit an application so we can follow up with you. If you have any additional questions, feel free to ask.",
+  "callout":"!",
+  "commands": {
+    "actions": {
+      "refresh":"pr",
+      "voiceactor":"va",
+      "playtester":"pt"
+    },
+    "text": {
+      "faq":"This is where a FAQ would go",
+      "test":"new test text!",
+      "poop":"haha poop"
+    }
+  },
+  "meeting": {
+    "day":3,
+    "time":"18:35",
+    "channel":"general",
+    "message":"@here, hello meeting",
+    "interval":60
+  },
+  "roles":{
+    "playtester":{
+      "id":"507374564154802186",
+      "message":"You have been granted the role {roleName}"
+    },
+    "voiceactor":{
+      "id":"507374564154802186",
+      "message":"You are now a {roleName}"
+    }
+  }
+}
