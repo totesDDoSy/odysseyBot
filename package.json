@@ -1,0 +1,14 @@
+{
+  "name": "odysseybot",
+  "version": "0.1.1",
+  "description": "a bot for the odyssey of the dragonborn skyrim mod",
+  "main": "odysseyBot.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "discord.js": "latest"
+  },
+  "author": "Cody Sanford",
+  "license": "ISC"
+}
