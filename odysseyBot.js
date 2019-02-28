@@ -41,7 +41,7 @@ client.on( 'guildMemberAdd', member =>
   // Send the welcome message if there is a valid welcome channel.
   if( channel )
   {
-    channel.send( properties['welcomeMessage'] )
+    channel.send( properties['welcomeMessage'].replace( /\{member\}/g, member ) )
       .then( debug( 'Sent welcome message' ) )
       .catch( console.error );
   }
@@ -94,6 +94,11 @@ client.on( 'message', message =>
               addRole( message.member, 'playtester', message );
             }
             break;
+          case "commands":
+            let cmdlist = Object.values( properties['commands']['actions'] )
+              .concat( Object.keys( properties['commands']['text'] ) );
+            message.channel.send( cmdlist.map( cmd => properties['callout'] + cmd ).join( ', ' ) );
+            break;
           default:
             console.error( `Unknown action message ${key}` );
         }
@@ -131,7 +136,8 @@ function addRole( member, role, message )
         debug( 'Added role ' + role + ' to member ' + member.displayName );
         if( message )
         {
-          message.reply( properties['roles'][role]['message'].replace( '{roleName}', roleName ) );
+          message.reply( properties['roles'][role]['message']
+            .replace( /\{roleName\}/g, roleName ) );
         }
       })
       .catch( console.error );
