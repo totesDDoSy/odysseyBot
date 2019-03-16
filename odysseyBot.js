@@ -111,6 +111,12 @@ client.on( 'message', message =>
   }
 });
 
+// general error handler.
+client.on( 'error', (e) => {
+  debug(e);
+  console.error( e );
+})
+
 // Log our bot in using the token from
 // https://discordapp.com/developers/applications/me
 client.login( properties['discordToken'] ).catch( it => {
@@ -195,7 +201,11 @@ function initMeetingChecker()
 function debug( msg )
 {
   if( properties['debug'] )
-    console.log( msg );
+  {
+    let date = new Date();
+    let timestamp = `[${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate()}-${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}.${date.getMilliseconds()}]`;
+    console.log( timestamp + msg );
+  }
 }
 
 /**
