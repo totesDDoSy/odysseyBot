@@ -94,6 +94,12 @@ client.on( 'message', message =>
               addRole( message.member, 'playtester', message );
             }
             break;
+          case "notifyme":
+            if( !message.member.roles.find( r1 => r1.id === properties['roles']['atendee']['id'] ) )
+            {
+              addRole( message.member, 'atendee', message );
+            }
+            break;
           case "commands":
             let cmdlist = Object.values( properties['commands']['actions'] )
               .concat( Object.keys( properties['commands']['text'] ) );
@@ -213,8 +219,16 @@ function debug( msg )
  */
 function getJSON( file = './bot.json' )
 {
-  let data = JSON.parse( fs.readFileSync( file, 'utf8' ) );
+  let data;
+  try {
+    data = JSON.parse( fs.readFileSync( file, 'utf8' ) );
 
-  if ( data['debug'] ) console.log( data );
+    if ( data['debug'] ) console.log( data );
+  } catch (e) {
+    console.error( 'Could not find file specified: ' + file );
+    console.error( e );
+    process.exit( -1 );
+  }
+
   return data;
 }
