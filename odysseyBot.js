@@ -1,9 +1,18 @@
+/* Odyssey Bot - A Node.js discord bot written for the Odyssey of the Dragonborn
+ * discord server.
+ * Author: Cody Sanford
+ * Date: 2019/04/11
+ */
 const Discord = require('discord.js');
 const fs = require('fs');
+const { Console } = require('console');
 
+// Setup
 const client = new Discord.Client();
 const propFile = process.argv[2];
+let logger = null;
 let properties = getJSON( propFile );
+debug(properties);
 let meetingTimeout = null;
 
 /**
@@ -22,7 +31,7 @@ client.on( 'ready', () =>
         {
           debug( 'Setting name to ' + properties['botname'] );
         } )
-      .catch( console.error );
+      .catch( error );
   }
 
   // Set the initial meeting interval.
@@ -43,7 +52,7 @@ client.on( 'guildMemberAdd', member =>
   {
     channel.send( properties['welcomeMessage'].replace( /\{member\}/g, member ) )
       .then( debug( 'Sent welcome message' ) )
-      .catch( console.error );
+      .catch( error );
   }
 });
 
@@ -106,8 +115,9 @@ client.on( 'message', message =>
             message.channel.send( cmdlist.map( cmd => properties['callout'] + cmd ).join( ', ' ) );
             break;
           default:
-            console.error( `Unknown action message ${key}` );
+            error( `Unknown action message ${key}` );
         }
+        return;
       }
     }
 
@@ -119,14 +129,24 @@ client.on( 'message', message =>
 
 // general error handler.
 client.on( 'error', (e) => {
-  debug(e);
-  console.error( e );
-})
+  error(`${getTimestamp()} An unknown error occured:`);
+  error( e );
+});
+
+client.on( 'reconnecting', (e) =>
+{
+  debug( 'Attempting to reconnect to the server...' );
+});
+
+client.on( 'resume', (e) =>
+{
+  debug( 'Connection resumed' );
+});
 
 // Log our bot in using the token from
 // https://discordapp.com/developers/applications/me
 client.login( properties['discordToken'] ).catch( it => {
-  console.error( 'Invalid Login Token!' );
+  error( 'Invalid Login Token!' );
 });
 
 // ------------------- Helper Functions ----------------------//
@@ -152,7 +172,7 @@ function addRole( member, role, message )
             .replace( /\{roleName\}/g, roleName ) );
         }
       })
-      .catch( console.error );
+      .catch( error );
     }
 }
 
@@ -206,12 +226,29 @@ function initMeetingChecker()
  */
 function debug( msg )
 {
-  if( properties['debug'] )
+  if( properties.debug )
   {
-    let date = new Date();
-    let timestamp = `[${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate()}-${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}.${date.getMilliseconds()}]`;
-    console.log( timestamp + msg );
+    logger.log( getTimestamp() + ' ' );
+    logger.log( msg );
   }
+}
+
+function error( obj )
+{
+  logger.error( obj );
+}
+
+function getTimestamp()
+{
+  let date = new Date();
+  let timestamp = `[${date.getFullYear()}/${padZero(date.getMonth() + 1)}/${padZero(date.getDate())}-${padZero(date.getHours())}:${padZero(date.getMinutes())}:${date.getSeconds()}.${date.getMilliseconds()}]`;
+
+  function padZero( thing )
+  {
+    return thing.toString().padStart(2,'0')
+  }
+
+  return timestamp;
 }
 
 /**
@@ -223,12 +260,28 @@ function getJSON( file = './bot.json' )
   try {
     data = JSON.parse( fs.readFileSync( file, 'utf8' ) );
 
-    if ( data['debug'] ) console.log( data );
+    logger = getLogger( data );
+
+    if ( data['debug'] )
+    {
+      logger.log( 'Loaded properties from file' );
+    }
   } catch (e) {
     console.error( 'Could not find file specified: ' + file );
     console.error( e );
-    process.exit( -1 );
+    process.exit( 1 );
   }
 
   return data;
+}
+
+function getLogger( data )
+{
+  let debug = data.debugFile;
+  let error = data.errorFile;
+
+  const output = debug ? fs.createWriteStream( debug, {flags:'a'} ) : process.stdout;
+  const errorOutput = error ? fs.createWriteStream( error, {flags:'a'} ) : process.stderr;
+
+  return new Console({ stdout: output, stderr: errorOutput });
 }
