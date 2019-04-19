@@ -1,6 +1,6 @@
 {
   "name": "odysseybot",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "a bot for the odyssey of the dragonborn skyrim mod",
   "main": "odysseyBot.js",
   "scripts": {

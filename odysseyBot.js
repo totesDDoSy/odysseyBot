@@ -24,16 +24,17 @@ client.on( 'ready', () =>
   debug( 'Bot connected!' );
 
   // Rename the bot based on the json data. This is only done at startup.
-  if( client.user.username !== properties['botname'] )
+  if( client.user.username !== properties.botname )
   {
-    client.user.setUsername( properties['botname'] )
+    client.user.setUsername( properties.botname )
       .then( user =>
         {
-          debug( 'Setting name to ' + properties['botname'] );
+          debug( 'Setting name to ' + properties.botname );
         } )
       .catch( error );
   }
 
+  setActivity( properties.activity.name, properties.activity.type );
   // Set the initial meeting interval.
   meetingTimeout = initMeetingChecker();
 });
@@ -45,12 +46,12 @@ client.on( 'guildMemberAdd', member =>
 
   // Find the welcome channel object.
   const channel = member.guild.channels
-    .find( ch => ch.name === properties['welcomeChannel'] );
+    .find( ch => ch.name === properties.welcomeChannel );
 
   // Send the welcome message if there is a valid welcome channel.
   if( channel )
   {
-    channel.send( properties['welcomeMessage'].replace( /\{member\}/g, member ) )
+    channel.send( properties.welcomeMessage.replace( /\{member\}/g, member ) )
       .then( debug( 'Sent welcome message' ) )
       .catch( error );
   }
@@ -66,53 +67,64 @@ client.on( 'message', message =>
   let content = message.content.toLowerCase();
 
   // Check if the message started with the callout.
-  if( content.startsWith( properties['callout'] ) )
+  if( content.startsWith( properties.callout ) )
   {
     // Strip the callout out of the message to get the command.
-    let command = content.replace( properties['callout'], '' );
+    let command = content.replace( properties.callout, '' );
     debug( 'Recieved Command: ' + message.content );
 
     // Check all the actions to see if the command was an action.
     // This is done this way because the key is the action and the
     // Value is the chat command.
-    for( let key in properties['commands']['actions'] )
+    for( let key in properties.commands.actions )
     {
-      if( properties['commands']['actions'][key].toLowerCase() === command )
+      if( properties.commands.actions[key].toLowerCase() === command.split(' ')[0] )
       {
         // Switch on the action we want to perform.
         switch( key )
         {
-          case "refresh":
-            if( message.member.roles.find( rl => rl.id === properties['adminRole'] ) )
+          case 'refresh':
+            if( message.member.roles.find( rl => rl.id === properties.adminRole ) )
             {
               refreshProperties();
             }
             else {
-              message.reply( properties['invalidPermissionMessage'] );
+              message.reply( properties.invalidPermissionMessage );
             }
             break;
-          case "voiceactor":
-            if( !message.member.roles.find( rl => rl.id === properties['roles']['voiceactor']['id'] ) )
+          case 'voiceactor':
+            if( !message.member.roles.find( rl => rl.id === properties.roles.voiceactor.id ) )
             {
               addRole( message.member, 'voiceactor', message );
             }
             break;
-          case "playtester":
-            if( !message.member.roles.find( rl => rl.id === properties['roles']['playtester']['id'] ) )
+          case 'playtester':
+            if( !message.member.roles.find( rl => rl.id === properties.roles.playtester.id ) )
             {
               addRole( message.member, 'playtester', message );
             }
             break;
-          case "notifyme":
-            if( !message.member.roles.find( r1 => r1.id === properties['roles']['atendee']['id'] ) )
+          case 'notifyme':
+            if( !message.member.roles.find( r1 => r1.id === properties.roles.atendee.id ) )
             {
               addRole( message.member, 'atendee', message );
             }
             break;
-          case "commands":
-            let cmdlist = Object.values( properties['commands']['actions'] )
-              .concat( Object.keys( properties['commands']['text'] ) );
-            message.channel.send( cmdlist.map( cmd => properties['callout'] + cmd ).join( ', ' ) );
+          case 'commands':
+            let cmdlist = Object.values( properties.commands.actions )
+              .concat( Object.keys( properties.commands.text ) );
+            message.channel.send( cmdlist.map( cmd => properties.callout + cmd ).join( ', ' ) );
+            break;
+          case 'activity':
+            if( message.member.roles.find( rl => rl.id === properties.adminRole ) )
+            {
+              let type = command.split(' ')[1];
+              let name = command.split( type )[1];
+              setActivity( name, type );
+            }
+            else {
+              message.reply( properties.invalidPermissionMessage );
+            }
             break;
           default:
             error( `Unknown action message ${key}` );
@@ -122,7 +134,7 @@ client.on( 'message', message =>
     }
 
     // Regardless of if there's an action, see if there's a text command.
-    let reply = properties['commands']['text'][command];
+    let reply = properties.commands.text[command];
     if( reply ) message.channel.send( reply );
   }
 });
@@ -145,7 +157,7 @@ client.on( 'resume', (e) =>
 
 // Log our bot in using the token from
 // https://discordapp.com/developers/applications/me
-client.login( properties['discordToken'] ).catch( it => {
+client.login( properties.discordToken ).catch( it => {
   error( 'Invalid Login Token!' );
 });
 
@@ -159,7 +171,7 @@ client.login( properties['discordToken'] ).catch( it => {
  */
 function addRole( member, role, message )
 {
-  let roleid = properties['roles'][role]['id'];
+  let roleid = properties.roles[role].id;
   let roleName = message.guild.roles.find( rl => rl.id === roleid ).name;
   if( member && !member.roles.find( rl => rl.id === roleid ) )
   {
@@ -168,7 +180,7 @@ function addRole( member, role, message )
         debug( 'Added role ' + role + ' to member ' + member.displayName );
         if( message )
         {
-          message.reply( properties['roles'][role]['message']
+          message.reply( properties.roles[role].message
             .replace( /\{roleName\}/g, roleName ) );
         }
       })
@@ -183,7 +195,6 @@ function refreshProperties()
 {
   debug( 'Refreshing properties' );
   properties = getJSON( propFile );
-  clearInterval( meetingTimeout );
   meetingTimeout = initMeetingChecker();
 }
 
@@ -193,32 +204,33 @@ function refreshProperties()
  */
 function initMeetingChecker()
 {
+  clearInterval( meetingTimeout );
   return setInterval( () =>
   {
     // Get the current date and the meeting object.
     let now = new Date();
-    let meeting = properties['meeting'];
+    let meeting = properties.meeting;
 
     // Check for day before the meeting.
-    if( now.getDay() === ( meeting['day'] + 6 ) % 7 )
+    if( now.getDay() === ( meeting.day + 6 ) % 7 )
     {
-      let hour = parseInt( meeting['time'].split(':')[0] );
+      let hour = parseInt( meeting.time.split(':')[0] );
       // Check to see if we're 24h before the meeting.
       if( now.getHours() === hour )
       {
-        let minute = parseInt( meeting['time'].split(':')[1] );
+        let minute = parseInt( meeting.time.split(':')[1] );
         // Check to see if we're at the same time as the meeting.
         if( now.getMinutes() === minute )
         {
           // Send the meeting reminder message.
           debug( 'Meeting notice!' );
           const channel = client.channels
-            .find( ch => ch.name === properties['meeting']['channel'] );
-          channel.send( properties['meeting']['message'] );
+            .find( ch => ch.name === properties.meeting.channel );
+          channel.send( properties.meeting.message );
         }
       }
     }
-  }, properties['meeting']['interval'] * 1000 );
+  }, properties.meeting.interval * 1000 );
 }
 
 /**
@@ -233,11 +245,17 @@ function debug( msg )
   }
 }
 
+/**
+ * Output an error.
+**/
 function error( obj )
 {
   logger.error( obj );
 }
 
+/**
+ * Get the timestamp for logging output.
+**/
 function getTimestamp()
 {
   let date = new Date();
@@ -262,7 +280,7 @@ function getJSON( file = './bot.json' )
 
     logger = getLogger( data );
 
-    if ( data['debug'] )
+    if ( data.debug )
     {
       logger.log( 'Loaded properties from file' );
     }
@@ -275,6 +293,10 @@ function getJSON( file = './bot.json' )
   return data;
 }
 
+/**
+ * Get the logger, which is set up either to use stdout/err or can be configured
+ * in the JSON setup file.
+**/
 function getLogger( data )
 {
   let debug = data.debugFile;
@@ -284,4 +306,17 @@ function getLogger( data )
   const errorOutput = error ? fs.createWriteStream( error, {flags:'a'} ) : process.stderr;
 
   return new Console({ stdout: output, stderr: errorOutput });
+}
+
+/**
+ * Set the bots activity to 'type name'.
+ **/
+function setActivity( name, type )
+{
+  if( ['watching', 'streaming', 'playing', 'listening'].includes( type.toLowerCase() ) )
+  {
+    client.user.setActivity( name, {type: type.toUpperCase()} )
+      .then( presence => debug(`Set activity to ${type} ${name}.`) )
+      .catch( error );
+  }
 }
