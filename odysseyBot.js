@@ -96,14 +96,14 @@ client.on( 'message', message =>
             if( !message.member.roles.find( rl => rl.id === properties.roles.voiceactor.id ) )
             {
               addRole( message.member, 'voiceactor', message );
-              addRole( message.member, 'limitedAccess' );
+              addRole( message.member, 'limitedAccess', message );
             }
             break;
           case 'playtester':
             if( !message.member.roles.find( rl => rl.id === properties.roles.playtester.id ) )
             {
               addRole( message.member, 'playtester', message );
-              addRole( message.member, 'limitedAccess' );
+              addRole( message.member, 'limitedAccess', message );
             }
             break;
           case 'notifyme':
@@ -180,7 +180,7 @@ function addRole( member, role, message )
     member.addRole( roleid )
       .then( () => {
         debug( 'Added role ' + role + ' to member ' + member.displayName );
-        if( message )
+        if( message && properties.roles[role].message )
         {
           message.reply( properties.roles[role].message
             .replace( /\{roleName\}/g, roleName ) );
