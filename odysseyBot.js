@@ -96,12 +96,14 @@ client.on( 'message', message =>
             if( !message.member.roles.find( rl => rl.id === properties.roles.voiceactor.id ) )
             {
               addRole( message.member, 'voiceactor', message );
+              addRole( message.member, 'limitedAccess' );
             }
             break;
           case 'playtester':
             if( !message.member.roles.find( rl => rl.id === properties.roles.playtester.id ) )
             {
               addRole( message.member, 'playtester', message );
+              addRole( message.member, 'limitedAccess' );
             }
             break;
           case 'notifyme':
